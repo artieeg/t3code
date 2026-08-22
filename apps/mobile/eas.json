@@ -55,6 +55,7 @@
   "submit": {
     "production": {
       "ios": {
+        "ascAppId": "6804201379",
         "appName": "T3 Code (Artem)",
         "bundleIdentifier": "com.artieeg.t3code",
         "appleTeamId": "ZMC8WZHB36",

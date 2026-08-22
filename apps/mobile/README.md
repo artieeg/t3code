@@ -131,13 +131,13 @@ This fork can build the iOS app and ship it to TestFlight under a personal Apple
 account, so a self-built app can talk to a personal T3 Connect server without
 needing access to the upstream Apple team or EAS project.
 
-|                           | Upstream                           | This fork                                    |
-| ------------------------- | ---------------------------------- | -------------------------------------------- |
-| EAS project               | `@pingdotgg/t3-code` (`d763fcb8…`) | `@artieeg/t3-code` (`d207b086…`)             |
-| iOS bundle id             | `com.t3tools.t3code`               | `com.artieeg.t3code`                         |
-| Apple team                | `ARK85ZXQ4Z` (T3 Tools)            | `ZMC8WZHB36` (Artem Griukov, Individual)     |
-| ASC record                | `6787819824`                       | created on first submit as `T3 Code (Artem)` |
-| Production runtime policy | `fingerprint`                      | `appVersion`                                 |
+|                           | Upstream                           | This fork                                |
+| ------------------------- | ---------------------------------- | ---------------------------------------- |
+| EAS project               | `@pingdotgg/t3-code` (`d763fcb8…`) | `@artieeg/t3-code` (`d207b086…`)         |
+| iOS bundle id             | `com.t3tools.t3code`               | `com.artieeg.t3code`                     |
+| Apple team                | `ARK85ZXQ4Z` (T3 Tools)            | `ZMC8WZHB36` (Artem Griukov, Individual) |
+| ASC record                | `6787819824`                       | `6804201379` (`T3 Code (Artem)`)         |
+| Production runtime policy | `fingerprint`                      | `appVersion`                             |
 
 These values are committed in `app.config.ts` and `eas.json` rather than read from
 `.env`, because `.env` and `.env.local` are gitignored and never reach the EAS build
@@ -163,9 +163,10 @@ First-time setup, in order:
 2. Set `T3CODE_CLERK_PUBLISHABLE_KEY`, `T3CODE_CLERK_JWT_TEMPLATE`, and
    `T3CODE_RELAY_URL` on the EAS `production` environment. Without them
    `hasCloudPublicConfig()` is false and T3 Connect is disabled entirely.
-3. First submit must be interactive (`eas submit -p ios --latest`) so App Store Connect
-   can create the app record. Afterwards, set `submit.production.ios.ascAppId` in
-   `eas.json` and `--auto-submit` works non-interactively.
+3. The first submit had to be interactive (`eas submit -p ios --latest`) so App Store
+   Connect could create the app record. That is done: the record is `6804201379`, now
+   pinned as `submit.production.ios.ascAppId`, so `--auto-submit` runs non-interactively
+   from here on. TestFlight internal access is granted via the `Team (Expo)` group.
 
 ### Reduced capabilities
 
