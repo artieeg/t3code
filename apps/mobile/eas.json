@@ -44,7 +44,8 @@
       "corepack": true,
       "env": {
         "APP_VARIANT": "production",
-        "NODE_OPTIONS": "--max-old-space-size=4096"
+        "NODE_OPTIONS": "--max-old-space-size=4096",
+        "MOBILE_VERSION_POLICY": "appVersion"
       },
       "channel": "production",
       "environment": "production",
@@ -54,7 +55,10 @@
   "submit": {
     "production": {
       "ios": {
-        "ascAppId": "6787819824"
+        "appName": "T3 Code (Artem)",
+        "bundleIdentifier": "com.artieeg.t3code",
+        "appleTeamId": "ZMC8WZHB36",
+        "language": "en-US"
       },
       "android": {
         "track": "internal"

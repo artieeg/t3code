@@ -9,9 +9,16 @@ const repoEnv = loadRepoEnv();
 Object.assign(process.env, repoEnv);
 
 const APP_VARIANT = resolveAppVariant(repoEnv.APP_VARIANT);
-const isIosPersonalTeamBuild = repoEnv.T3CODE_IOS_PERSONAL_TEAM === "1";
+// Personal-fork build (artieeg/t3code): published to Artem's own Apple team and
+// EAS project, not T3 Tools'. These defaults are committed rather than read from
+// .env/.env.local because those files are gitignored and never reach the EAS
+// build server, which re-evaluates this config from a git archive — an env-only
+// override would silently fall back to the upstream project. Set
+// T3CODE_IOS_PERSONAL_TEAM=0 to restore the upstream full-capability build.
+const isIosPersonalTeamBuild = repoEnv.T3CODE_IOS_PERSONAL_TEAM !== "0";
 
-const personalTeamBundleIdentifier = repoEnv.T3CODE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim();
+const personalTeamBundleIdentifier =
+  repoEnv.T3CODE_IOS_PERSONAL_TEAM_BUNDLE_ID?.trim() ?? "com.artieeg.t3code";
 const IOS_BUNDLE_IDENTIFIER_PATTERN = /^[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/;
 
 const fromRepoRoot = (relativePath: string) => `../../${relativePath}`;
@@ -174,7 +181,7 @@ const config: ExpoConfig = {
   userInterfaceStyle: "automatic",
   updates: {
     enabled: true,
-    url: "https://u.expo.dev/d763fcb8-d37c-41ea-a773-b54a0ab4a454",
+    url: "https://u.expo.dev/d207b086-daf0-46ac-bdbb-55136a786265",
     checkAutomatically: "ON_LOAD",
     fallbackToCacheTimeout: 0,
   },
@@ -185,10 +192,8 @@ const config: ExpoConfig = {
     // showcase capture build requires full screen (see infoPlist below).
     requireFullScreen: process.env.T3_SHOWCASE_CAPTURE_BUILD === "1",
     bundleIdentifier: iosBundleIdentifier,
-    // Pin code signing to the T3 Tools team so non-interactive `expo run:ios`
-    // does not fall back to a personal team (which cannot sign app groups,
-    // Sign in with Apple, or push notification entitlements).
-    appleTeamId: "ARK85ZXQ4Z",
+    // Artem's Individual Apple Developer team. Upstream pins ARK85ZXQ4Z (T3 Tools).
+    appleTeamId: "ZMC8WZHB36",
     associatedDomains: [
       `applinks:${variant.relyingParty}`,
       `webcredentials:${variant.relyingParty}`,
@@ -366,10 +371,10 @@ const config: ExpoConfig = {
       tracesToken: repoEnv.EXPO_PUBLIC_OTLP_TRACES_TOKEN ?? null,
     },
     eas: {
-      projectId: "d763fcb8-d37c-41ea-a773-b54a0ab4a454",
+      projectId: "d207b086-daf0-46ac-bdbb-55136a786265",
     },
   },
-  owner: "pingdotgg",
+  owner: "artieeg",
 };
 
 export default config;
