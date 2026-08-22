@@ -120,3 +120,72 @@ vp run eas:android:dev
 vp run eas:android:preview:dev
 vp run eas:android:preview
 ```
+
+## Personal TestFlight builds (artieeg fork)
+
+> [!NOTE]
+> This section describes a fork-only setup. It does not apply to `pingdotgg/t3code`,
+> and the identifiers below are not T3 Tools'.
+
+This fork can build the iOS app and ship it to TestFlight under a personal Apple
+account, so a self-built app can talk to a personal T3 Connect server without
+needing access to the upstream Apple team or EAS project.
+
+|                           | Upstream                           | This fork                                    |
+| ------------------------- | ---------------------------------- | -------------------------------------------- |
+| EAS project               | `@pingdotgg/t3-code` (`d763fcb8…`) | `@artieeg/t3-code` (`d207b086…`)             |
+| iOS bundle id             | `com.t3tools.t3code`               | `com.artieeg.t3code`                         |
+| Apple team                | `ARK85ZXQ4Z` (T3 Tools)            | `ZMC8WZHB36` (Artem Griukov, Individual)     |
+| ASC record                | `6787819824`                       | created on first submit as `T3 Code (Artem)` |
+| Production runtime policy | `fingerprint`                      | `appVersion`                                 |
+
+These values are committed in `app.config.ts` and `eas.json` rather than read from
+`.env`, because `.env` and `.env.local` are gitignored and never reach the EAS build
+server — which re-evaluates the config from a git archive. An env-only override would
+silently fall back to the upstream project instead of failing loudly.
+
+### Building and submitting
+
+Builds must run on EAS; the iOS SDK required by Expo SDK 56 is newer than some local
+Xcode installs. `MOBILE_VERSION_POLICY=appVersion` is set on the production profile so
+`eas build` can be invoked from macOS — the `fingerprint` policy requires the invoking
+machine to match the build environment, and it buys nothing here because this fork
+ships no OTA updates.
+
+```bash
+eas build --profile production --platform ios --auto-submit
+```
+
+First-time setup, in order:
+
+1. `eas credentials -p ios` → Build Credentials. Interactive only; it needs an Apple
+   login with 2FA to create the provisioning profile.
+2. Set `T3CODE_CLERK_PUBLISHABLE_KEY`, `T3CODE_CLERK_JWT_TEMPLATE`, and
+   `T3CODE_RELAY_URL` on the EAS `production` environment. Without them
+   `hasCloudPublicConfig()` is false and T3 Connect is disabled entirely.
+3. First submit must be interactive (`eas submit -p ios --latest`) so App Store Connect
+   can create the app record. Afterwards, set `submit.production.ios.ascAppId` in
+   `eas.json` and `--auto-submit` works non-interactively.
+
+### Reduced capabilities
+
+The build defaults to the reduced-capability path that `T3CODE_IOS_PERSONAL_TEAM`
+originally gated for Personal Teams. A paid Individual team could sign these, but each
+extension is another provisioning profile to maintain, and the widget cannot work
+regardless. Set `T3CODE_IOS_PERSONAL_TEAM=0` to restore the upstream full build.
+
+What does not work under a personal bundle id, and why:
+
+- **Push notifications and the Agent Activity widget.** The relay is configured with a
+  single APNs team/key/bundle (`APNS_BUNDLE_ID`, `infra/relay/src/worker.ts`) targeting
+  `com.t3tools.t3code`. APNs will not deliver to another bundle id. Self-hosting
+  `infra/relay` with your own APNs key is the only fix.
+- **Native Google and Apple sign-in.** Those client ids are bound to the `com.t3tools.*`
+  bundle ids. Sign in with email instead; it reaches the same Clerk account.
+- **Universal links and passkeys** for `clerk.t3.codes`. The entitlement signs fine, but
+  the domain's AASA file cannot list a third-party app id. Sign-in callbacks still
+  complete over the custom URL scheme.
+
+Everything foreground — threads, terminal, diffs, review — works normally, because
+T3 Connect authorizes on Clerk account plus a locally generated DPoP keypair
+(`src/features/cloud/dpop.ts`), never on app identity.
