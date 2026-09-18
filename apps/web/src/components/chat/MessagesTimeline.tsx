@@ -1781,6 +1781,7 @@ function QueuedMessageTimelineRow({
             cwd={ctx.markdownCwd}
             threadRef={ctx.threadRef ?? undefined}
             lineBreaks
+            parseRawHtml={false}
             skills={ctx.skills}
             headingLevelOffset={MESSAGE_HEADING_LEVEL}
           />
